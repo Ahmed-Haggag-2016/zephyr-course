@@ -1,14 +1,16 @@
 manifest:
-  version: 1.0
+  version: "1.0"
+
+  # Correct schema syntax to apply global group filtering inside the manifest file
+  group-filter:
+    - -optional
 
   projects:
     - name: zephyr
       url: https://github.com/zephyrproject-rtos/zephyr
       revision: v4.2.0
+      # Keep your clean, self-contained workspace star topology pathing
+      #path: deps/zephyr
       import:
-        name-allowlist:
-          - cmsis_6
-          - hal_nxp
-          - hal_stm32
-          - hal_nordic
         path-prefix: deps
+
