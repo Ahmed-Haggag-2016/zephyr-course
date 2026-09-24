@@ -1,6 +1,7 @@
-/{
-    aliases {
-          //app-led = &led_0;// by node label
-          app-led  = "/leds/led_0";// by path
-        };
-};
+// /{
+//     aliases {
+//           //app-led = &led_0;// by node label
+//           app-led  = "/leds/led_0";// by path
+//         };
+// };
+//

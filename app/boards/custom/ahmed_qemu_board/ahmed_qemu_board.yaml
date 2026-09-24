@@ -1,0 +1,18 @@
+identifier: ahmed_qemu_board
+name: QEMU Emulation for Cortex-M3
+type: qemu
+simulation:
+  - name: qemu
+arch: arm
+toolchain:
+  - zephyr
+  - gnuarmemb
+supported:
+  - netif:serial-net
+  - gpio
+ram: 64
+flash: 256
+testing:
+  ignore_tags:
+    - net
+vendor: ti
