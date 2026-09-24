@@ -1,0 +1,7 @@
+# Copyright (c) 2016 Zephyr Contributors
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_SCRATCH_QEMU_BOARD
+	select SOC_TI_LM3S6965
+	help
+	  Cortex-M3 Emulation (QEMU)
