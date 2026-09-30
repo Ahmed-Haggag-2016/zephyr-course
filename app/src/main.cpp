@@ -31,15 +31,47 @@
 //     }
 //     return 0;
 // }
-#include <stdio.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
 
+// #include <stdio.h>
+// #include <zephyr/kernel.h>
+// #include <zephyr/sys/printk.h>
+
+
+// int main(void)
+// {
+// 	printk("Hello World! %s\n", CONFIG_BOARD_TARGET);
+
+
+// 	return 0;
+// }
+
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
 
 int main(void)
 {
-	printk("Hello World! %s\n", CONFIG_BOARD_TARGET);
+    // Retrieve the matching device reference token from the Devicetree layout
+    const struct device *dev = DEVICE_DT_GET(DT_NODELABEL(my_led_sensor));
 
+    if (!device_is_ready(dev)) {
+        printk("Custom LED Sensor driver device not ready!\n");
+        return -ENODEV;
+    }
 
-	return 0;
+    printk("=== Native Sim Custom Sensor Test Started ===\n");
+
+    for (int i = 0; i < 3; i++) {
+        // Triggers sample_fetch -> Turns LED ON
+        sensor_sample_fetch(dev);
+        k_msleep(1000);
+
+        // Triggers channel_get -> Turns LED OFF
+        struct sensor_value dummy;
+        sensor_channel_get(dev, SENSOR_CHAN_ALL, &dummy);
+        k_msleep(1000);
+    }
+
+    printk("=== Test Completed Natively ===\n");
+    return 0;
 }

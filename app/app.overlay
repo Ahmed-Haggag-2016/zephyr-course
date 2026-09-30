@@ -5,3 +5,13 @@
 //         };
 // };
 //
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
+/ {
+    my_led_sensor: led_sensor_0 {
+        compatible = "our,led-sensor";
+        /* Connect to virtual gpio0, pin 0, active high flag */
+        led-gpios = <&gpio0 0 GPIO_ACTIVE_HIGH>;
+        status = "okay";
+    };
+};

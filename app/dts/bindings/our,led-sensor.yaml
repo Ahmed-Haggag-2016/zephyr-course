@@ -1,0 +1,10 @@
+description: Custom LED Sensor Driver simulating sensor APIs
+compatible: "our,led-sensor"
+
+include: base.yaml
+
+properties:
+  led-gpios:
+    type: phandle-array
+    required: true
+    description: GPIO specifier linking to the target simulation LED pin.
