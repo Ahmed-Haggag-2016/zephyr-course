@@ -4,59 +4,79 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/sensor.h>
+#include "led_sensor.h"  // Include our custom API interface header
 
-/* Config structural layout matching instantiation requirements */
+/* Constant configuration struct (Stored in Flash memory) */
 struct led_sensor_config {
     struct gpio_dt_spec led_gpio;
 };
 
-/* 1. sample_fetch: Talks to hardware -> Turns the LED ON */
+/* Dynamic data struct for mutable runtime parameters (Stored in RAM) */
+struct led_sensor_data {
+    int custom_param;  // The parameter to be modified by our custom extension API
+};
+
+/* Implementation of the Custom Extension API Function */
+void led_sensor_set_custom_parameter(const struct device *dev, int new_val)
+{
+    // Retrieve the dynamic runtime data pointer out of the generic device instance
+    struct led_sensor_data *data = (struct led_sensor_data *)dev->data;
+
+    // Modify the variable in the dynamic data struct
+    data->custom_param = new_val;
+
+    printk("[CUSTOM API LOG] led_sensor_set_custom_parameter executed! New data->custom_param value = %d\n", 
+           data->custom_param);
+}
+
+/* Standard sample_fetch: Turns the LED ON */
 static int led_sensor_sample_fetch(const struct device *dev, enum sensor_channel chan)
 {
     const struct led_sensor_config *cfg = dev->config;
+    const struct led_sensor_data *data = dev->data; // Read data if needed
     
-    // Turn the simulated LED ON (Value = 1)
     int ret = gpio_pin_set_dt(&cfg->led_gpio, 1);
     if (ret == 0) {
-        printk("[DRIVER LOG] sensor_sample_fetch executed -> LED Turned ON!\n");
+        printk("[DRIVER LOG] sample_fetch called (Current param = %d) -> LED ON!\n", data->custom_param);
     }
     return ret;
 }
 
-/* 2. channel_get: Converts state -> Turns the LED OFF */
+/* Standard channel_get: Turns the LED OFF */
 static int led_sensor_channel_get(const struct device *dev, enum sensor_channel chan, struct sensor_value *val)
 {
     const struct led_sensor_config *cfg = dev->config;
 
-    // Turn the simulated LED OFF (Value = 0)
     int ret = gpio_pin_set_dt(&cfg->led_gpio, 0);
     if (ret == 0) {
-        printk("[DRIVER LOG] sensor_channel_get executed  -> LED Turned OFF!\n");
+        printk("[DRIVER LOG] channel_get called -> LED OFF!\n");
     }
     return ret;
 }
 
-/* Bind methods to the standard Zephyr Sensor API footprint */
 static DEVICE_API(sensor, led_sensor_api) = {
     .sample_fetch = led_sensor_sample_fetch,
     .channel_get = led_sensor_channel_get,
 };
 
-/* Initialization routine to configure the target GPIO framework pin */
 static int led_sensor_init(const struct device *dev)
 {
     const struct led_sensor_config *cfg = dev->config;
+    struct led_sensor_data *data = dev->data;
+
+    // Set a baseline starting value inside our dynamic data parameter
+    data->custom_param = 100;
 
     if (!gpio_is_ready_dt(&cfg->led_gpio)) {
         return -ENODEV;
     }
 
-    // Prepare pin as a standard output path
     return gpio_pin_configure_dt(&cfg->led_gpio, GPIO_OUTPUT_INACTIVE);
 }
 
-/* Macro to generate internal device tracking records automatically */
+/* Updated Macro: Passes the runtime data structure references into the definition layout */
 #define LED_SENSOR_DEFINE(inst)                                        \
+    static struct led_sensor_data led_sensor_data_##inst;              \
     static const struct led_sensor_config led_sensor_config_##inst = { \
         .led_gpio = GPIO_DT_SPEC_INST_GET(inst, led_gpios),           \
     };                                                                 \
@@ -64,7 +84,7 @@ static int led_sensor_init(const struct device *dev)
     DEVICE_DT_INST_DEFINE(inst,                                        \
                           led_sensor_init,                             \
                           NULL,                                        \
-                          NULL,                                        \
+                          &led_sensor_data_##inst,                     \
                           &led_sensor_config_##inst,                   \
                           POST_KERNEL,                                 \
                           CONFIG_SENSOR_INIT_PRIORITY,                 \

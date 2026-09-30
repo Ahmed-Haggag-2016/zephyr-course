@@ -48,10 +48,10 @@
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
+#include "led_sensor.h"  // Include our custom extension header
 
 int main(void)
 {
-    // Retrieve the matching device reference token from the Devicetree layout
     const struct device *dev = DEVICE_DT_GET(DT_NODELABEL(my_led_sensor));
 
     if (!device_is_ready(dev)) {
@@ -59,19 +59,23 @@ int main(void)
         return -ENODEV;
     }
 
-    printk("=== Native Sim Custom Sensor Test Started ===\n");
+    printk("=== Native Sim Extension API Test Started ===\n");
 
-    for (int i = 0; i < 3; i++) {
-        // Triggers sample_fetch -> Turns LED ON
-        sensor_sample_fetch(dev);
-        k_msleep(1000);
+    // 1. Initial run showing the default initialized parameter state (100)
+    sensor_sample_fetch(dev);
+    k_msleep(500);
+    struct sensor_value dummy;
+    sensor_channel_get(dev, SENSOR_CHAN_ALL, &dummy);
+    k_msleep(500);
 
-        // Triggers channel_get -> Turns LED OFF
-        struct sensor_value dummy;
-        sensor_channel_get(dev, SENSOR_CHAN_ALL, &dummy);
-        k_msleep(1000);
-    }
+    // 2. Call custom extension API function to change the runtime parameter value to 555
+    led_sensor_set_custom_parameter(dev, 555);
 
-    printk("=== Test Completed Natively ===\n");
+    // 3. Next run to prove that the parameter inside the driver's structural data block updated successfully
+    sensor_sample_fetch(dev);
+    k_msleep(500);
+    sensor_channel_get(dev, SENSOR_CHAN_ALL, &dummy);
+
+    printk("=== Extension API Test Completed Natively ===\n");
     return 0;
 }
