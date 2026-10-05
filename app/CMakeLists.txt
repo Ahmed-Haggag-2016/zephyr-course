@@ -6,3 +6,4 @@ project(my_zephyr_app)
 
 target_sources(app PRIVATE src/main.cpp)
 target_sources(app PRIVATE src/led_sensor.c)
+target_sources(app PRIVATE src/led_sensor_shell.c)
